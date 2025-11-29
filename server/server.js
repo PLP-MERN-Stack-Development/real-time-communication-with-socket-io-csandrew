@@ -61,6 +61,35 @@ io.on('connection', (socket) => {
     }
     
     io.emit('receive_message', message);
+    // Acknowledge delivery to sender
+    socket.emit('message_ack', { id: message.id, status: 'delivered' });
+  });
+
+  // Handle message reactions
+  socket.on('add_reaction', ({ messageId, reaction }) => {
+    const msg = messages.find((m) => m.id === messageId);
+    if (msg) {
+      msg.reactions = msg.reactions || [];
+      msg.reactions.push({ reaction, by: users[socket.id]?.username || 'Anonymous' });
+      io.emit('message_reaction', { messageId, reactions: msg.reactions });
+    }
+  });
+
+  // Simple pagination: request older messages before a given id
+  socket.on('get_messages', ({ beforeId, limit = 20 }) => {
+    let page;
+    if (!beforeId) {
+      page = messages.slice(-limit);
+    } else {
+      const idx = messages.findIndex((m) => m.id === beforeId);
+      if (idx === -1) {
+        page = [];
+      } else {
+        const start = Math.max(0, idx - limit);
+        page = messages.slice(start, idx);
+      }
+    }
+    socket.emit('message_page', page);
   });
 
   // Handle typing indicator

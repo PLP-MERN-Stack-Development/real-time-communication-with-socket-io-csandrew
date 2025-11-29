@@ -89,3 +89,29 @@ Build a real-time chat application using Socket.io that demonstrates bidirection
    - Add the deployed URLs to your README.md
 7. Your submission will be automatically graded based on the criteria in the autograding configuration
 8. The instructor will review your submission after the autograding is complete 
+
+## ✅ Completion Status (based on current repo)
+
+- **Implemented (server):** Express server with Socket.io, CORS and static hosting; events for `user_join`, `send_message`, `private_message`, `typing`, and `disconnect`; in-memory storage for connected users and the most recent messages; API endpoints `GET /api/messages` and `GET /api/users`.
+- **Implemented (client):** Socket.io client setup at `client/src/socket/socket.js` with `useSocket` hook exposing `connect`, `disconnect`, `sendMessage`, `sendPrivateMessage`, and `setTyping`; listeners for `receive_message`, `private_message`, `user_list`, `user_joined`, `user_left`, and `typing_users`; reconnection options enabled.
+- **Advanced features present:** Private messaging, typing indicators, user presence (online/offline), reconnection logic, basic system messages for joins/leaves, and message storage/emit on the server.
+- **Features not yet implemented (optional):** File/image sharing, read receipts, message reactions, browser push notifications (Web Notifications API), message pagination/search, and persistent storage (database) for messages/users.
+
+## ▶ How to run (development)
+
+Run these from a PowerShell terminal in separate tabs/windows:
+
+```powershell
+# Server
+cd server; npm install; npm run dev
+
+# Client
+cd client; npm install; npm run dev
+```
+
+The server listens on `process.env.PORT` or `5000` by default. The client expects the socket server URL at `VITE_SOCKET_URL` (defaults to `http://localhost:5000`).
+
+## Notes & Next Steps
+
+- The repository already contains the core Socket.io functionality required by the assignment. If you want, I can implement any of the missing advanced features (for example: file sharing, read receipts, browser notifications, or database persistence), add UI components/screenshots, or prepare deployment instructions.
+- To continue, tell me which feature(s) you want implemented next or whether you'd like me to run the app locally and verify behavior.

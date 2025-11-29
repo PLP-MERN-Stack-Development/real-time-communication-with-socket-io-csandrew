@@ -21,6 +21,7 @@ export const useSocket = () => {
   const [messages, setMessages] = useState([]);
   const [users, setUsers] = useState([]);
   const [typingUsers, setTypingUsers] = useState([]);
+  const [messagePages, setMessagePages] = useState([]);
 
   // Connect to socket server
   const connect = (username) => {
@@ -38,6 +39,16 @@ export const useSocket = () => {
   // Send a message
   const sendMessage = (message) => {
     socket.emit('send_message', { message });
+  };
+
+  // Add reaction to a message
+  const addReaction = (messageId, reaction) => {
+    socket.emit('add_reaction', { messageId, reaction });
+  };
+
+  // Request older messages (pagination)
+  const getMessages = ({ beforeId = null, limit = 20 } = {}) => {
+    socket.emit('get_messages', { beforeId, limit });
   };
 
   // Send a private message
@@ -65,6 +76,11 @@ export const useSocket = () => {
     const onReceiveMessage = (message) => {
       setLastMessage(message);
       setMessages((prev) => [...prev, message]);
+    };
+
+    const onMessageAck = (ack) => {
+      // Could update message delivery status in UI; for now just log
+      console.debug('Message ack', ack);
     };
 
     const onPrivateMessage = (message) => {
@@ -108,26 +124,43 @@ export const useSocket = () => {
       setTypingUsers(users);
     };
 
+    const onMessageReaction = ({ messageId, reactions }) => {
+      setMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, reactions } : m)));
+    };
+
+    const onMessagePage = (page) => {
+      // Prepend older page to pages array
+      setMessagePages((prev) => [page, ...prev]);
+      // Optionally prepend to messages shown in UI
+      setMessages((prev) => [...page, ...prev]);
+    };
+
     // Register event listeners
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     socket.on('receive_message', onReceiveMessage);
+    socket.on('message_ack', onMessageAck);
     socket.on('private_message', onPrivateMessage);
     socket.on('user_list', onUserList);
     socket.on('user_joined', onUserJoined);
     socket.on('user_left', onUserLeft);
     socket.on('typing_users', onTypingUsers);
+    socket.on('message_reaction', onMessageReaction);
+    socket.on('message_page', onMessagePage);
 
     // Clean up event listeners
     return () => {
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
       socket.off('receive_message', onReceiveMessage);
+      socket.off('message_ack', onMessageAck);
       socket.off('private_message', onPrivateMessage);
       socket.off('user_list', onUserList);
       socket.off('user_joined', onUserJoined);
       socket.off('user_left', onUserLeft);
       socket.off('typing_users', onTypingUsers);
+      socket.off('message_reaction', onMessageReaction);
+      socket.off('message_page', onMessagePage);
     };
   }, []);
 
@@ -142,6 +175,8 @@ export const useSocket = () => {
     disconnect,
     sendMessage,
     sendPrivateMessage,
+    addReaction,
+    getMessages,
     setTyping,
   };
 };
